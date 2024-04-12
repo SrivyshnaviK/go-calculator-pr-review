@@ -1,25 +1,3 @@
-# go-calculator
-
-## Requirements
-
-* Go 1.14+
-  * for [`math.FMA()`](https://golang.org/pkg/math/#FMA)
-
-## Usage
-
-```
-$ go run cmd/calculator/main.go
-calculator> (2.5 - 1.35) * 2.0
-2.3
-calculator> -sin((-1+2.5)*pi)
-1
-calculator> 180*atan2(log(e), log10(10))/pi
-45
-calculator> exit
-```
-
-You can also use `calculator.Calculate()` in your application:
-```go
 package main
 
 import (
@@ -48,8 +26,3 @@ func main() {
 	}
 	fmt.Println(val) // 45
 }
-```
-
-## References
-
-* [chibicc](https://github.com/rui314/chibicc): A small C compiler

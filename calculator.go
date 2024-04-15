@@ -60,7 +60,7 @@ var functions = map[string]interface{}{
 func call(funcName string, args []float64) (float64, error) {
 	f, ok := functions[funcName]
 	if !ok {
-		return 0, fmt.Errorf("unknown function %s", funcName)
+		return 0, fmt.Errorf("unknown function %s", funcNam)
 	}
 	switch f := f.(type) {
 	case func() float64:
@@ -87,7 +87,7 @@ func calculate(n *node) (float64, error) {
 		if err != nil {
 			return 0, err
 		}
-		return left + right, nil
+		return left + right, err
 	case subNode:
 		left, err := calculate(n.left)
 		if err != nil {

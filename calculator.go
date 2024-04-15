@@ -60,25 +60,34 @@ var functions = map[string]interface{}{
 func call(funcName string, args []float64) (float64, error) {
 	f, ok := functions[funcName]
 	if !ok {
-		return 0, fmt.Errorf("unknown function %s", funcName)
+		return 0, fmt.Errorf("unknown function: %s", funcName)
 	}
-	switch f := f.(type) {
-	case func() float64:
-		return f(), nil
-	case func(float64) float64:
-		return f(args[0]), nil
-	case func(float64, float64) float64:
-		return f(args[0], args[1]), nil
-	case func(float64, float64, float64) float64:
-		return f(args[0], args[1], args[2]), nil
-	default:
-		return 0, fmt.Errorf("invalid function %s", funcName)
+
+	switch len(args) {
+	case 0:
+		if fn, ok := f.(func() float64); ok {
+			return fn(), nil
+		}
+	case 1:
+		if fn, ok := f.(func(float64) float64); ok {
+			return fn(args[0]), nil
+		}
+	case 2:
+		if fn, ok := f.(func(float64, float64) float64); ok {
+			return fn(args[0], args[1]), nil
+		}
+	case 3:
+		if fn, ok := f.(func(float64, float64, float64) float64); ok {
+			return fn(args[0], args[1], args[2]), nil
+		}
 	}
+
+	return 0, fmt.Errorf("invalid function signature for %s", funcName)
 }
 
 func calculate(n *node) (float64, error) {
 	switch n.kind {
-	case addNode:
+	case addNode, subNode, mulNode, divNode:
 		left, err := calculate(n.left)
 		if err != nil {
 			return 0, err
@@ -87,47 +96,31 @@ func calculate(n *node) (float64, error) {
 		if err != nil {
 			return 0, err
 		}
-		return left + right, nil
-	case subNode:
-		left, err := calculate(n.left)
-		if err != nil {
-			return 0, err
+
+		if n.kind == divNode && right == 0 {
+			return 0, fmt.Errorf("division by zero")
 		}
-		right, err := calculate(n.right)
-		if err != nil {
-			return 0, err
+
+		switch n.kind {
+		case addNode:
+			return left + right, nil
+		case subNode:
+			return left - right, nil
+		case mulNode:
+			return left * right, nil
+		case divNode:
+			return left / right, nil
 		}
-		return left - right, nil
-	case mulNode:
-		left, err := calculate(n.left)
-		if err != nil {
-			return 0, err
-		}
-		right, err := calculate(n.right)
-		if err != nil {
-			return 0, err
-		}
-		return left * right, nil
-	case divNode:
-		left, err := calculate(n.left)
-		if err != nil {
-			return 0, err
-		}
-		right, err := calculate(n.right)
-		if err != nil {
-			return 0, err
-		}
-		return left / right, nil
 	case numNode:
 		return n.val, nil
 	case funcNode:
-		args := []float64{}
-		for _, arg := range n.args {
+		args := make([]float64, len(n.args))
+		for i, arg := range n.args {
 			val, err := calculate(arg)
 			if err != nil {
 				return 0, err
 			}
-			args = append(args, val)
+			args[i] = val
 		}
 		return call(n.funcName, args)
 	}
